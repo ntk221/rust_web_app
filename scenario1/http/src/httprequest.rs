@@ -107,8 +107,14 @@ fn process_req_line(s: &str) -> (Method, Resource, Version) {
 }
 fn process_header_line(s: &str) -> (String, String) {
     let mut iter = s.split(":");
-    let key = iter.next().unwrap().to_string();
-    let value = iter.next().unwrap().to_string();
+    let mut key = String::from("");
+    let mut value = String::from("");
+    if let Some(k) = iter.next() {
+        key = k.to_string();
+    }
+    if let Some(v) = iter.next() {
+        value = v.to_string();
+    }
     (key, value)
 }
 
@@ -137,5 +143,10 @@ mod tests {
         assert_eq!(request.method, Method::Get);
         assert_eq!(request.resource, Resource::Path(String::from("/")));
         assert_eq!(request.version, Version::V1_1);
+        let mut headers_expected = HashMap::new();
+        headers_expected.insert(String::from("Host"), String::from(" localhost"));
+        headers_expected.insert(String::from("User-Agent"), String::from(" curl/7.64.1"));
+        headers_expected.insert(String::from("Accept"), String::from(" */*"));
+        assert_eq!(request.headers, headers_expected);
     }
 }
