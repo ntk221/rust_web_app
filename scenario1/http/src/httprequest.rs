@@ -58,8 +58,8 @@ pub struct HttpRequest {
     pub msg_body: String,
 }
 
-impl From<&str> for HttpRequest {
-    fn from(s: &str) -> Self {
+impl From<String> for HttpRequest {
+    fn from(req: String) -> Self {
         // 1. 受信 HTTP リクエストの各行を読み取ります。各行はCRLFで区切られます。
         // 2. 各行を以下の様に評価する
         /*
@@ -74,7 +74,7 @@ impl From<&str> for HttpRequest {
         let mut parsed_resource = Resource::Path("".to_string());
         let mut parsed_headers = HashMap::new();
         let mut parsed_msg_body = "";
-        for line in s.lines() {
+        for line in req.lines() {
             if line.contains("HTTP") {
                 let (method, resource, version) = process_req_line(line);
                 parsed_method = method;
@@ -99,11 +99,19 @@ impl From<&str> for HttpRequest {
 }
 
 fn process_req_line(s: &str) -> (Method, Resource, Version) {
-    let mut iter = s.split_whitespace();
-    let method = Method::from(iter.next().unwrap());
-    let resource = Resource::Path(iter.next().unwrap().to_string());
-    let version = Version::from(iter.next().unwrap());
-    (method, resource, version)
+    // Parse the request line into individual chunks split by whitespaces.
+    let mut words = s.split_whitespace();
+    // Extract the HTTP method from first part of the request line
+    let method = words.next().unwrap();
+    // Extract the resource (URI/URL) from second part of the request line
+    let resource = words.next().unwrap();
+    // Extract the HTTP version from third part of the request line
+    let version = words.next().unwrap();
+    (
+        method.into(),
+        Resource::Path(resource.to_string()),
+        version.into(),
+    )
 }
 fn process_header_line(s: &str) -> (String, String) {
     let mut iter = s.split(":");
